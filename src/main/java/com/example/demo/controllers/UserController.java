@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -32,6 +33,9 @@ public class UserController {
     @Autowired
     private CartRepository cartRepository;
 
+    @Autowired
+    private BCryptPasswordEncoder bCryptPasswordEncoder;
+
     @GetMapping("/id/{id}")
     public ResponseEntity<User> findById(@PathVariable Long id) {
         return ResponseEntity.of(userRepository.findById(id));
@@ -49,9 +53,19 @@ public class UserController {
 
         User user = new User();
         user.setUsername(createUserRequest.getUsername());
+
         Cart cart = new Cart();
         cartRepository.save(cart);
+
         user.setCart(cart);
+
+        if (createUserRequest.getPassword().length() < 8 || !createUserRequest.getPassword().equals(createUserRequest.getConfirmPassword())) {
+            LOGGER.error("Event 'createUser', user password error: creating user={} failed.", createUserRequest.getUsername());
+            return ResponseEntity.badRequest().build();
+        }
+
+        user.setPassword(bCryptPasswordEncoder.encode(createUserRequest.getPassword()));
+
         userRepository.save(user);
 
         LOGGER.info("Event 'createUser' successfully finished: item added to cart for user={}", createUserRequest.getUsername());
