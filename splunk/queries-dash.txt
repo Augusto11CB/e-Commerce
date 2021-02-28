@@ -1,0 +1,5 @@
+Users created Successfully
+source="app.log" host="ni-16692-1p" sourcetype="e-commerce" successfully createUser | timechart span=1m count
+
+Error while Creating a New User
+source="app.log" host="ni-16692-1p" sourcetype="e-commerce" error createUser | timechart span=1m count
